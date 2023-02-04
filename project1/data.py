@@ -97,23 +97,45 @@ class Data:
 
         filepath = '/home/parth/cs251/project1/data/iris.csv'
 
-        with open(filepath, 'r') as csv_file:
-            csv_reader = csv.reader(csv_file)
+        with open(filepath, 'r') as file:
+            reader = csv.reader(file)
+            self.headers = next(reader)
+            data = list(range(0, len(self.headers)))
+                        
+            print(self.headers)
+            print(data)
 
-            # Get headers
-            self.headers = next(csv_reader)
+            # Read in types
+            types = next(reader)
 
-            # Get types
-            types = next(csv_reader)
+            # Remove headers if the type is not numeric
+            for i in range(len(types)):
+                if(types[i] != "numeric"):
+                    self.headers.pop(i)
+                    data.pop(i)
 
-            # Get data
+            print(self.headers)
+            print(data)
+
+            # Read in data rowwise
             self.data = []
-            for row in csv_reader:
+            for row in reader:
+                x = 0
+                for i in range(len(row)):
+                    if(x in data):
+                        row[i] = float(row[i])
+                    x += 1
                 self.data.append(row)
-        
-        print(self.data)
+            
+        # Store in dictionary
+        self.header2col = {}
+        for i in range(len(self.headers)):
+            self.header2col[self.headers[i]] = i
+
 
         self.data = np.array(self.data)
+
+        print(self.data)
 
     def __str__(self):
         '''toString method
