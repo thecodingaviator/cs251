@@ -88,22 +88,15 @@ class Data:
         - Check out the test scripts for the desired outputs.
         '''
 
-        # Read in the .csv file `filepath` to set `self.data`. Parse the file to only store
-        # numeric columns of data in a 2D tabular format (ignore non-numeric ones). Make sure
-        # everything that you add is a float.
-
         # Start reading csv
         import csv
 
-        filepath = '/home/parth/cs251/project1/data/iris.csv'
+        self.filepath = '/home/parth/cs251/project1/data/iris.csv'
 
-        with open(filepath, 'r') as file:
+        with open(self.filepath, 'r') as file:
             reader = csv.reader(file)
             self.headers = next(reader)
             data = list(range(0, len(self.headers)))
-                        
-            print(self.headers)
-            print(data)
 
             # Read in types
             types = next(reader)
@@ -114,19 +107,18 @@ class Data:
                     self.headers.pop(i)
                     data.pop(i)
 
-            print(self.headers)
-            print(data)
-
             # Read in data rowwise
             self.data = []
+            # Read only if i is in data
             for row in reader:
-                x = 0
-                for i in range(len(row)):
-                    if(x in data):
-                        row[i] = float(row[i])
-                    x += 1
-                self.data.append(row)
-            
+                rows = [row[i] for i in data]
+                
+                # Convert to float
+                for i in range(len(rows)):
+                    rows[i] = float(rows[i])
+
+                self.data.append(rows)
+
         # Store in dictionary
         self.header2col = {}
         for i in range(len(self.headers)):
@@ -134,8 +126,6 @@ class Data:
 
 
         self.data = np.array(self.data)
-
-        print(self.data)
 
     def __str__(self):
         '''toString method
@@ -149,25 +139,21 @@ class Data:
             Only show, at most, the 1st 5 rows of data
             See the test code for an example output.
         '''
-        pass
+        
+        # Return first five rows of data like a table
+        
+        str = ""
+        for i in range(5):
+            for j in range(len(self.headers)):
+                str += "{:10}".format(self.data[i][j])
+
+        return str
 
     def get_headers(self):
-        '''Get method for headers
-
-        Returns:
-        -----------
-        Python list of str.
-        '''
-        pass
+        return self.headers
 
     def get_mappings(self):
-        '''Get method for mapping between variable name and column index
-
-        Returns:
-        -----------
-        Python dictionary. str -> int
-        '''
-        pass
+        return self.header2col
 
     def get_num_dims(self):
         '''Get method for number of dimensions in each data sample
@@ -221,29 +207,36 @@ class Data:
             NOTE: This should be a COPY, not the data stored here itself.
             This can be accomplished with numpy's copy function.
         '''
-        pass
+        
+        return self.data.copy()
 
     def head(self):
         '''Return the 1st five data samples (all variables)
-
-        (Week 2)
-
-        Returns:
-        -----------
-        ndarray. shape=(5, num_vars). 1st five data samples.
         '''
-        pass
+
+        # Create ndarray
+        data = np.ndarray(shape=(5, len(self.headers)))
+
+        # Fill in data
+        for i in range(5):
+            for j in range(len(self.headers)):
+                data[i][j] = self.data[i][j]
+
+        return data
 
     def tail(self):
         '''Return the last five data samples (all variables)
-
-        (Week 2)
-
-        Returns:
-        -----------
-        ndarray. shape=(5, num_vars). Last five data samples.
         '''
-        pass
+
+        # Create ndarray
+        data = np.ndarray(shape=(5, len(self.headers)))
+
+        # Fill in data
+        for i in range(self.data.shape[0] - 5, self.data.shape[0]):
+            for j in range(len(self.headers)):
+                data[i][j] = self.data[i][j]
+
+        return data
 
     def limit_samples(self, start_row, end_row):
         '''Update the data so that this `Data` object only stores samples in the contiguous range:
