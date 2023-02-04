@@ -5,8 +5,14 @@ CS 251 Data Analysis and Visualization
 Spring 2023
 '''
 
+import numpy as np
 
 class Data:
+    filepath = None
+    headers = None
+    data = None
+    header2col = None
+
     def __init__(self, filepath=None, headers=None, data=None, header2col=None):
         '''Data object constructor
 
@@ -34,9 +40,10 @@ class Data:
             - Any others you find helpful in your implementation
         - If `filepath` isn't None, call the `read` method.
         '''
-        if(filepath is not None):
+        self.filepath = filepath
+
+        if(self.filepath is not None):
             self.read(filepath)
-        pass
 
     def read(self, filepath):
         '''Read in the .csv file `filepath` in 2D tabular format. Convert to numpy ndarray called
@@ -80,7 +87,33 @@ class Data:
         or check the project website for some guidelines.
         - Check out the test scripts for the desired outputs.
         '''
-        pass
+
+        # Read in the .csv file `filepath` to set `self.data`. Parse the file to only store
+        # numeric columns of data in a 2D tabular format (ignore non-numeric ones). Make sure
+        # everything that you add is a float.
+
+        # Start reading csv
+        import csv
+
+        filepath = '/home/parth/cs251/project1/data/iris.csv'
+
+        with open(filepath, 'r') as csv_file:
+            csv_reader = csv.reader(csv_file)
+
+            # Get headers
+            self.headers = next(csv_reader)
+
+            # Get types
+            types = next(csv_reader)
+
+            # Get data
+            self.data = []
+            for row in csv_reader:
+                self.data.append(row)
+        
+        print(self.data)
+
+        self.data = np.array(self.data)
 
     def __str__(self):
         '''toString method
