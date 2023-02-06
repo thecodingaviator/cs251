@@ -91,21 +91,38 @@ class Data:
         # Start reading csv
         import csv
 
-        self.filepath = filepath
+        self.filepath = "/home/parth/cs251/project1/" + filepath
 
         with open(self.filepath, 'r') as file:
             reader = csv.reader(file)
             self.headers = next(reader)
+
+            # Trim all headers
+            for i in range(len(self.headers)):
+                self.headers[i] = self.headers[i].strip()
+
             data = list(range(0, len(self.headers)))
 
             # Read in types
             types = next(reader)
 
-            # Remove headers if the type is not numeric
+            # Trim all types
             for i in range(len(types)):
-                if(types[i] != "numeric"):
-                    self.headers.pop(i)
-                    data.pop(i)
+                types[i] = types[i].strip()
+
+            maxHeaders = len(self.headers)
+ 
+            iterator = 0
+            currCol = 0
+
+            while iterator < maxHeaders:
+                if(types[iterator] != "numeric"):
+                    self.headers.pop(iterator)
+                    data.pop(iterator)
+                    types.pop(iterator)
+                    maxHeaders -= 1
+                else:
+                    iterator += 1
 
             # Read in data rowwise
             self.data = []
