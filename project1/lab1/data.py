@@ -1,18 +1,12 @@
 '''data.py
 Reads CSV files, stores data, access/filter data by variable name
-Parth Parth
+YOUR NAME HERE
 CS 251 Data Analysis and Visualization
 Spring 2023
 '''
 
-import numpy as np
 
 class Data:
-    filepath = None
-    headers = None
-    data = None
-    header2col = None
-
     def __init__(self, filepath=None, headers=None, data=None, header2col=None):
         '''Data object constructor
 
@@ -40,10 +34,7 @@ class Data:
             - Any others you find helpful in your implementation
         - If `filepath` isn't None, call the `read` method.
         '''
-        self.filepath = filepath
-
-        if(self.filepath is not None):
-            self.read(filepath)
+        pass
 
     def read(self, filepath):
         '''Read in the .csv file `filepath` in 2D tabular format. Convert to numpy ndarray called
@@ -87,45 +78,8 @@ class Data:
         or check the project website for some guidelines.
         - Check out the test scripts for the desired outputs.
         '''
-
-        # Start reading csv
-        import csv
-
-        self.filepath = filepath
-
-        with open(self.filepath, 'r') as file:
-            reader = csv.reader(file)
-            self.headers = next(reader)
-            data = list(range(0, len(self.headers)))
-
-            # Read in types
-            types = next(reader)
-
-            # Remove headers if the type is not numeric
-            for i in range(len(types)):
-                if(types[i] != "numeric"):
-                    self.headers.pop(i)
-                    data.pop(i)
-
-            # Read in data rowwise
-            self.data = []
-            # Read only if i is in data
-            for row in reader:
-                rows = [row[i] for i in data]
-                
-                # Convert to float
-                for i in range(len(rows)):
-                    rows[i] = float(rows[i])
-
-                self.data.append(rows)
-
-        # Store in dictionary
-        self.header2col = {}
-        for i in range(len(self.headers)):
-            self.header2col[self.headers[i]] = i
-
-
-        self.data = np.array(self.data)
+        
+        print("I can do Jupyter Notebooks!")
 
     def __str__(self):
         '''toString method
@@ -139,21 +93,25 @@ class Data:
             Only show, at most, the 1st 5 rows of data
             See the test code for an example output.
         '''
-        
-        # Return first five rows of data like a table
-        
-        str = ""
-        for i in range(5):
-            for j in range(len(self.headers)):
-                str += "{:10}".format(self.data[i][j])
-
-        return str
+        pass
 
     def get_headers(self):
-        return self.headers
+        '''Get method for headers
+
+        Returns:
+        -----------
+        Python list of str.
+        '''
+        pass
 
     def get_mappings(self):
-        return self.header2col
+        '''Get method for mapping between variable name and column index
+
+        Returns:
+        -----------
+        Python dictionary. str -> int
+        '''
+        pass
 
     def get_num_dims(self):
         '''Get method for number of dimensions in each data sample
@@ -207,36 +165,29 @@ class Data:
             NOTE: This should be a COPY, not the data stored here itself.
             This can be accomplished with numpy's copy function.
         '''
-        
-        return self.data.copy()
+        pass
 
     def head(self):
         '''Return the 1st five data samples (all variables)
+
+        (Week 2)
+
+        Returns:
+        -----------
+        ndarray. shape=(5, num_vars). 1st five data samples.
         '''
-
-        # Create ndarray
-        data = np.ndarray(shape=(5, len(self.headers)))
-
-        # Fill in data
-        for i in range(5):
-            for j in range(len(self.headers)):
-                data[i][j] = self.data[i][j]
-
-        return data
+        pass
 
     def tail(self):
         '''Return the last five data samples (all variables)
+
+        (Week 2)
+
+        Returns:
+        -----------
+        ndarray. shape=(5, num_vars). Last five data samples.
         '''
-
-        # Create ndarray
-        data = np.ndarray(shape=(5, len(self.headers)))
-
-        # Fill in data
-        for i in range(self.data.shape[0] - 5, self.data.shape[0]):
-            for j in range(len(self.headers)):
-                data[i][j] = self.data[i][j]
-
-        return data
+        pass
 
     def limit_samples(self, start_row, end_row):
         '''Update the data so that this `Data` object only stores samples in the contiguous range:
