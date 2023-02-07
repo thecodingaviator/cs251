@@ -93,14 +93,18 @@ class Data:
 
         self.filepath = "/home/parth/cs251/project1/" + filepath
 
+        # Open file
         with open(self.filepath, 'r') as file:
             reader = csv.reader(file)
+
+            # Read in headers
             self.headers = next(reader)
 
             # Trim all headers
             for i in range(len(self.headers)):
                 self.headers[i] = self.headers[i].strip()
 
+            # Create a list to track which columns are numeric
             data = list(range(0, len(self.headers)))
 
             # Read in types
@@ -110,11 +114,18 @@ class Data:
             for i in range(len(types)):
                 types[i] = types[i].strip()
 
+            # Make sure that each element of types is numeric, string, enum, or date
+            for i in range(len(types)):
+                if(types[i] != "numeric" and types[i] != "string" and types[i] != "enum" and types[i] != "date"):
+                    print("Error: Invalid type or types missing.")
+                    return
+
             maxHeaders = len(self.headers)
  
             iterator = 0
             currCol = 0
 
+            # Remove non-numeric columns
             while iterator < maxHeaders:
                 if(types[iterator] != "numeric"):
                     self.headers.pop(iterator)
@@ -141,7 +152,7 @@ class Data:
         for i in range(len(self.headers)):
             self.header2col[self.headers[i]] = i
 
-
+        # Convert to numpy array
         self.data = np.array(self.data)
 
     def __str__(self):
@@ -156,20 +167,41 @@ class Data:
             Only show, at most, the 1st 5 rows of data
             See the test code for an example output.
         '''
-        
-        # Return first five rows of data like a table
-        
-        str = ""
-        for i in range(5):
-            for j in range(len(self.headers)):
-                str += "{:10}".format(self.data[i][j])
 
-        return str
+        strng = ""
+
+        strng += "-------------------------------\n"
+        strng += self.filepath + " (" + str(len(self.data)) + "x" + str(len(self.headers)) + ")\n"
+        strng += "Headers: \n" + ' '.join(self.headers) + "\n"
+        strng += "-------------------------------\n"
+        if len(self.data) >= 5:
+            strng += "Showing first 5/" + str(len(self.data)) + " rows\n"
+
+        for i in range(min(5, len(self.data))):
+            strng += ' '.join([str(x) for x in self.data[i]]) + "\n"
+
+        strng += "-------------------------------\n"
+        
+        return strng
 
     def get_headers(self):
+        '''Get method for headers
+
+        Returns:
+        -----------
+        Python list of str.
+        '''
+
         return self.headers
 
     def get_mappings(self):
+        '''Get method for mapping between variable name and column index
+
+        Returns:
+        -----------
+        Python dictionary. str -> int
+        '''
+
         return self.header2col
 
     def get_num_dims(self):
@@ -179,7 +211,8 @@ class Data:
         -----------
         int. Number of dimensions in each data sample. Same thing as number of variables.
         '''
-        pass
+
+        return self.data.shape[1]
 
     def get_num_samples(self):
         '''Get method for number of data points (samples) in the dataset
@@ -188,7 +221,8 @@ class Data:
         -----------
         int. Number of data samples in dataset.
         '''
-        pass
+        
+        return self.data.shape[0]
 
     def get_sample(self, rowInd):
         '''Gets the data sample at index `rowInd` (the `rowInd`-th sample)
@@ -197,7 +231,8 @@ class Data:
         -----------
         ndarray. shape=(num_vars,) The data sample at index `rowInd`
         '''
-        pass
+        
+        return self.data[rowInd]
 
     def get_header_indices(self, headers):
         '''Gets the variable (column) indices of the str variable names in `headers`.
@@ -211,7 +246,13 @@ class Data:
         Python list of nonnegative ints. shape=len(headers). The indices of the headers in `headers`
             list.
         '''
-        pass
+        
+        headInd = []
+
+        for header in headers:
+            headInd.append(self.header2col[header])
+
+        return headInd
 
     def get_all_data(self):
         '''Gets a copy of the entire dataset
@@ -229,6 +270,12 @@ class Data:
 
     def head(self):
         '''Return the 1st five data samples (all variables)
+
+        (Week 2)
+
+        Returns:
+        -----------
+        ndarray. shape=(5, num_vars). 1st five data samples.
         '''
 
         # Create ndarray
@@ -243,6 +290,12 @@ class Data:
 
     def tail(self):
         '''Return the last five data samples (all variables)
+
+        (Week 2)
+
+        Returns:
+        -----------
+        ndarray. shape=(5, num_vars). Last five data samples.
         '''
 
         # Create ndarray
