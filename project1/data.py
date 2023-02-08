@@ -91,7 +91,10 @@ class Data:
         # Start reading csv
         import csv
 
-        self.filepath = "/home/parth/cs251/project1/" + filepath
+        # For local testing only. Sorry if I turned the next line in
+        # self.filepath = "/home/parth/cs251/project1/" + filepath
+
+        self.filepath = filepath
 
         # Open file
         with open(self.filepath, 'r') as file:
