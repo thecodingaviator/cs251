@@ -126,7 +126,6 @@ class Data:
             maxHeaders = len(self.headers)
  
             iterator = 0
-            currCol = 0
 
             # Remove non-numeric columns
             while iterator < maxHeaders:
