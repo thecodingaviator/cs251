@@ -44,6 +44,9 @@ class Data:
 
         if(self.filepath is not None):
             self.read(filepath)
+        # else id data is not none
+        elif(data is not None):
+            self.data = data
 
     def read(self, filepath):
         '''Read in the .csv file `filepath` in 2D tabular format. Convert to numpy ndarray called
@@ -280,15 +283,17 @@ class Data:
         ndarray. shape=(5, num_vars). 1st five data samples.
         '''
 
+        reqRows = min(5, len(self.data))
+
         # Create ndarray
-        data = np.ndarray(shape=(5, len(self.headers)))
+        dataReq = np.ndarray(shape=(reqRows, len(self.headers)))
 
         # Fill in data
-        for i in range(5):
+        for i in range(reqRows):
             for j in range(len(self.headers)):
-                data[i][j] = self.data[i][j]
+                dataReq[i][j] = self.data[i][j]
 
-        return data
+        return dataReq
 
     def tail(self):
         '''Return the last five data samples (all variables)
@@ -300,15 +305,18 @@ class Data:
         ndarray. shape=(5, num_vars). Last five data samples.
         '''
 
+        reqRows = min(5, len(self.data))
+
         # Create ndarray
-        data = np.ndarray(shape=(5, len(self.headers)))
+        dataReq = np.ndarray(shape=(reqRows, len(self.headers)))
 
-        # Fill in data
-        for i in range(self.data.shape[0] - 5, self.data.shape[0]):
+        # Fill in data from the last reqRows rows
+        for i in range(reqRows):
             for j in range(len(self.headers)):
-                data[i][j] = self.data[i][j]
+                dataReq[i][j] = self.data[len(self.data) - reqRows + i][j]
 
-        return data
+        return dataReq
+
 
     def limit_samples(self, start_row, end_row):
         '''Update the data so that this `Data` object only stores samples in the contiguous range:
@@ -318,11 +326,11 @@ class Data:
         (Week 2)
 
         '''
-        
+
         newData = []
 
         # Loop between start_row and end_row
-        for i in start_row, end_row:
+        for i in range(start_row, end_row):
             newData.append(self.data[i])
 
         self.data = newData
