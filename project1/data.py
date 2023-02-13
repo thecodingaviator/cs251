@@ -318,7 +318,14 @@ class Data:
         (Week 2)
 
         '''
-        pass
+        
+        newData = []
+
+        # Loop between start_row and end_row
+        for i in start_row, end_row:
+            newData.append(self.data[i])
+
+        self.data = newData
 
     def select_data(self, headers, rows=[]):
         '''Return data samples corresponding to the variable names in `headers`.
@@ -345,4 +352,22 @@ class Data:
 
         Hint: For selecting a subset of rows from the data ndarray, check out np.ix_
         '''
-        pass
+        
+        rowsToLoop = []
+
+        # If rows is not empty, rowsToLoop is rows
+        if rows != []:
+            rowsToLoop = rows
+        # Else, rowsToLoop is all rows
+        else:
+            rowsToLoop = range(self.data.shape[0])
+
+        # Create ndarray
+        dataReq = np.ndarray(shape=(len(rowsToLoop), len(headers)))
+
+        # Fill in data
+        for i in range(len(rowsToLoop)):
+            for j in range(len(headers)):
+                dataReq[i][j] = self.data[rowsToLoop[i]][self.header2col[headers[j]]]
+
+        return dataReq
