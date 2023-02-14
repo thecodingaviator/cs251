@@ -30,7 +30,8 @@ class Analysis:
         -----------
         data: Data object. Contains all data samples and variables in a dataset.
         '''
-        pass
+        
+        self.data = data
 
     def min(self, headers, rows=[]):
         '''Computes the minimum of each variable in `headers` in the data object.
@@ -52,7 +53,15 @@ class Analysis:
 
         NOTE: There should be no loops in this method!
         '''
-        pass
+        
+        # Get the data from the data object
+        data = self.data.select_data(headers, rows)
+
+        # Compute the minimum of each column
+        mins = np.min(data, axis=0)
+
+        return mins
+
 
     def max(self, headers, rows=[]):
         '''Computes the maximum of each variable in `headers` in the data object.
@@ -73,7 +82,14 @@ class Analysis:
 
         NOTE: There should be no loops in this method!
         '''
-        pass
+        
+        # Get the data from the data object
+        data = self.data.select_data(headers, rows)
+
+        # Compute the maximum of each column
+        maxs = np.max(data, axis=0)
+
+        return maxs
 
     def range(self, headers, rows=[]):
         '''Computes the range [min, max] for each variable in `headers` in the data object.
@@ -96,7 +112,8 @@ class Analysis:
 
         NOTE: There should be no loops in this method!
         '''
-        pass
+        
+        return self.min(headers, rows), self.max(headers, rows)
 
     def mean(self, headers, rows=[]):
         '''Computes the mean for each variable in `headers` in the data object.
@@ -118,7 +135,14 @@ class Analysis:
         NOTE: You CANNOT use np.mean here!
         NOTE: There should be no loops in this method!
         '''
-        pass
+        
+        # Get the data from the data object
+        data = self.data.select_data(headers, rows)
+
+        # Compute the mean of each column
+        means = np.sum(data, axis=0) / data.shape[0]
+
+        return means
 
     def var(self, headers, rows=[]):
         '''Computes the variance for each variable in `headers` in the data object.
@@ -140,7 +164,17 @@ class Analysis:
         NOTE: You CANNOT use np.var or np.mean here!
         NOTE: There should be no loops in this method!
         '''
-        pass
+        
+        # Get the data from the data object
+        data = self.data.select_data(headers, rows)
+
+        # Compute the mean of each column
+        means = self.mean(headers, rows)
+
+        # Compute the variance of each column
+        vars = np.sum((data - means)**2, axis=0) / data.shape[0]
+
+        return vars
 
     def std(self, headers, rows=[]):
         '''Computes the standard deviation for each variable in `headers` in the data object.
@@ -162,7 +196,14 @@ class Analysis:
         NOTE: You CANNOT use np.var, np.std, or np.mean here!
         NOTE: There should be no loops in this method!
         '''
-        pass
+        
+        # Get the data from the data object
+        data = self.data.select_data(headers, rows)
+
+        # Compute the standard deviation of each column
+        vars = np.sqrt(self.var(headers, rows))
+
+        return vars
 
     def show(self):
         '''Simple wrapper function for matplotlib's show function.
@@ -194,7 +235,18 @@ class Analysis:
 
         NOTE: Do not call plt.show() here.
         '''
-        pass
+        
+        # Get the data from the data object
+        x = self.data.select_data([ind_var])
+        y = self.data.select_data([dep_var])
+
+        # Create the scatter plot
+        plt.scatter(x, y)
+        plt.title(title)
+        plt.xlabel(ind_var)
+        plt.ylabel(dep_var)
+
+        return x, y
 
     def pair_plot(self, data_vars, fig_sz=(12, 12), title=''):
         '''Create a pair plot: grid of scatter plots showing all combinations of variables in
@@ -227,4 +279,32 @@ class Analysis:
         Because variables may have different ranges, pair plot columns usually share the same
         x axis and rows usually share the same y axis.
         '''
-        pass
+        
+        # Make the len(data_vars) x len(data_vars) grid of scatterplots
+        fig, axes = plt.subplots(len(data_vars), len(data_vars), figsize=fig_sz)
+
+        # Set the title of the figure
+        fig.suptitle(title)
+
+        # The y axis of the first column should be labeled with the appropriate variable being plotted there.
+        for i in range(len(data_vars)):
+            axes[i, 0].set_ylabel(data_vars[i])
+
+        # The x axis of the last row should be labeled with the appropriate variable being plotted there.
+        for i in range(len(data_vars)):
+            axes[-1, i].set_xlabel(data_vars[i])
+
+        # There should be no other axis or tick labels (it looks too cluttered otherwise!)
+        for i in range(len(data_vars)):
+            for j in range(len(data_vars)):
+                if i != len(data_vars) - 1:
+                    axes[i, j].set_xticklabels([])
+                if j != 0:
+                    axes[i, j].set_yticklabels([])
+
+        # Create the scatter plots
+        for i in range(len(data_vars)):
+            for j in range(len(data_vars)):
+                axes[i, j].scatter(self.data.select_data([data_vars[j]]), self.data.select_data([data_vars[i]]))
+
+        return fig, axes
