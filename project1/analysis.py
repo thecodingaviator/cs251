@@ -30,7 +30,7 @@ class Analysis:
         -----------
         data: Data object. Contains all data samples and variables in a dataset.
         '''
-        
+
         self.data = data
 
     def min(self, headers, rows=[]):
@@ -53,7 +53,7 @@ class Analysis:
 
         NOTE: There should be no loops in this method!
         '''
-        
+
         # Get the data from the data object
         data = self.data.select_data(headers, rows)
 
@@ -61,7 +61,6 @@ class Analysis:
         mins = np.min(data, axis=0)
 
         return mins
-
 
     def max(self, headers, rows=[]):
         '''Computes the maximum of each variable in `headers` in the data object.
@@ -82,7 +81,7 @@ class Analysis:
 
         NOTE: There should be no loops in this method!
         '''
-        
+
         # Get the data from the data object
         data = self.data.select_data(headers, rows)
 
@@ -112,7 +111,7 @@ class Analysis:
 
         NOTE: There should be no loops in this method!
         '''
-        
+
         return self.min(headers, rows), self.max(headers, rows)
 
     def mean(self, headers, rows=[]):
@@ -135,7 +134,7 @@ class Analysis:
         NOTE: You CANNOT use np.mean here!
         NOTE: There should be no loops in this method!
         '''
-        
+
         # Get the data from the data object
         data = self.data.select_data(headers, rows)
 
@@ -164,7 +163,7 @@ class Analysis:
         NOTE: You CANNOT use np.var or np.mean here!
         NOTE: There should be no loops in this method!
         '''
-        
+
         # Get the data from the data object
         data = self.data.select_data(headers, rows)
 
@@ -172,7 +171,7 @@ class Analysis:
         means = self.mean(headers, rows)
 
         # Compute the variance of each column
-        vars = np.sum((data - means)**2, axis=0) / data.shape[0]
+        vars = np.sum((data - means)**2, axis=0) / (data.shape[0] - 1)
 
         return vars
 
@@ -196,7 +195,7 @@ class Analysis:
         NOTE: You CANNOT use np.var, np.std, or np.mean here!
         NOTE: There should be no loops in this method!
         '''
-        
+
         # Get the data from the data object
         data = self.data.select_data(headers, rows)
 
@@ -235,7 +234,7 @@ class Analysis:
 
         NOTE: Do not call plt.show() here.
         '''
-        
+
         # Get the data from the data object
         x = self.data.select_data([ind_var])
         y = self.data.select_data([dep_var])
@@ -279,9 +278,10 @@ class Analysis:
         Because variables may have different ranges, pair plot columns usually share the same
         x axis and rows usually share the same y axis.
         '''
-        
+
         # Make the len(data_vars) x len(data_vars) grid of scatterplots
-        fig, axes = plt.subplots(len(data_vars), len(data_vars), figsize=fig_sz)
+        fig, axes = plt.subplots(
+            len(data_vars), len(data_vars), figsize=fig_sz)
 
         # Set the title of the figure
         fig.suptitle(title)
@@ -294,17 +294,101 @@ class Analysis:
         for i in range(len(data_vars)):
             axes[-1, i].set_xlabel(data_vars[i])
 
-        # There should be no other axis or tick labels (it looks too cluttered otherwise!)
+        # Remove the axis and tick labels
         for i in range(len(data_vars)):
             for j in range(len(data_vars)):
-                if i != len(data_vars) - 1:
-                    axes[i, j].set_xticklabels([])
-                if j != 0:
-                    axes[i, j].set_yticklabels([])
+                axes[i, j].set_xticklabels([])
+                axes[i, j].set_yticklabels([])
+                axes[i, j].set_xticks([])
+                axes[i, j].set_yticks([])
 
         # Create the scatter plots
         for i in range(len(data_vars)):
             for j in range(len(data_vars)):
-                axes[i, j].scatter(self.data.select_data([data_vars[j]]), self.data.select_data([data_vars[i]]))
+                axes[i, j].scatter(self.data.select_data(
+                    [data_vars[j]]), self.data.select_data([data_vars[i]]))
 
         return fig, axes
+
+    def regress(self, ind_var, dep_var):
+        '''Computes the regression
+        y = m * x + b
+        where x is the independent variable and y is the dependent variable.
+
+        Parameters:
+        -----------
+        ind_var: str.
+            Name of variable that is plotted along the x axis
+        dep_var: str.
+            Name of variable that is plotted along the y axis
+
+        Returns:
+        -----------
+        m. float.
+            The slope of the regression line
+        b. float.
+            The intercept of the regression line
+        r. float.
+            The correlation coefficient of the regression line
+        '''
+
+        # Get the data from the data object
+        x = self.data.select_data([ind_var])
+        y = self.data.select_data([dep_var])
+
+        # Compute values needed for regression line
+        sigma_x = np.sum(x)
+        sigma_y = np.sum(y)
+
+        sigma_x2 = np.sum(x**2)
+        sigma_y2 = np.sum(y**2)
+
+        sigma_xy = np.sum(x*y)
+
+        n = len(x)
+
+        # Compute the regression line
+        m = (n*sigma_xy - sigma_x*sigma_y)/(n*sigma_x2 - sigma_x**2)
+        b = (sigma_y - m*sigma_x)/n
+
+        # Compute r
+        r = (n*sigma_xy - sigma_x*sigma_y)/(np.sqrt(n*sigma_x2 - sigma_x**2)*np.sqrt(n*sigma_y2 - sigma_y**2))
+
+        return [m, b, r]
+    
+    def regress_plot(self, ind_var, dep_var):
+        '''
+        Creates a scatter plot with the regression line overlayed on top of it.
+
+        Parameters:
+        -----------
+        ind_var: str.
+            Name of variable that is plotted along the x axis
+        dep_var: str.
+            Name of variable that is plotted along the y axis
+        '''
+
+        # Get the data from the data object
+        x = self.data.select_data([ind_var])
+        y = self.data.select_data([dep_var])
+
+        # Compute the regression line
+        m, b, r = self.regress(ind_var, dep_var)
+
+        # Create the scatter plot
+        plt.scatter(x, y)
+        plt.title(f'Regression Plot ({ind_var} vs. {dep_var})')
+
+        # Create the regression line
+        plt.plot(x, m*x + b, color='red')
+
+        # Add the regression line equation to the plot
+        plt.text(0.05, 0.95, f'y = {m:.2f}x + {b:.2f}', transform=plt.gca().transAxes, size = 8)
+
+        # Add the correlation coefficient to the plot
+        plt.text(0.05, 0.90, f'r = {r:.2f}', transform=plt.gca().transAxes, size = 8)
+
+        plt.xlabel(ind_var)
+        plt.ylabel(dep_var)
+
+        plt.show()
