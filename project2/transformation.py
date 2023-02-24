@@ -10,7 +10,6 @@ import palettable
 import analysis
 import data
 
-
 class Transformation(analysis.Analysis):
 
     def __init__(self, orig_dataset, data=None):
@@ -189,7 +188,7 @@ class Transformation(analysis.Analysis):
         Dh = self.get_data_homogeneous()
         S = self.scale_matrix(magnitudes)
 
-        Dh = np.matmul(Dh, S)
+        Dh = S @ Dh.T
 
         self.data = data.Data(headers = self.data.headers, data = Dh[:, :-1], header2col = self.data.header2col)
 
@@ -218,7 +217,7 @@ class Transformation(analysis.Analysis):
         
         Dh = self.get_data_homogeneous()
 
-        Dh = np.matmul(Dh, C)
+        Dh = C @ Dh.T
 
         self.data = data.Data(headers = self.data.headers, data = Dh[:, :-1], header2col = self.data.header2col)
 
