@@ -286,6 +286,14 @@ class Analysis:
         # Set the title of the figure
         fig.suptitle(title)
 
+        # Add label only to the outer axes
+        for i in range(len(data_vars)):
+            for j in range(len(data_vars)):
+                if i != len(data_vars) - 1:
+                    axes[i, j].set_xticklabels([])
+                if j != 0:
+                    axes[i, j].set_yticklabels([])
+
         # The y axis of the first column should be labeled with the appropriate variable being plotted there.
         for i in range(len(data_vars)):
             axes[i, 0].set_ylabel(data_vars[i])
@@ -293,14 +301,6 @@ class Analysis:
         # The x axis of the last row should be labeled with the appropriate variable being plotted there.
         for i in range(len(data_vars)):
             axes[-1, i].set_xlabel(data_vars[i])
-
-        # Remove the axis and tick labels
-        for i in range(len(data_vars)):
-            for j in range(len(data_vars)):
-                axes[i, j].set_xticklabels([])
-                axes[i, j].set_yticklabels([])
-                axes[i, j].set_xticks([])
-                axes[i, j].set_yticks([])
 
         # Create the scatter plots
         for i in range(len(data_vars)):

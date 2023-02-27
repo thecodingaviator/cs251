@@ -60,7 +60,9 @@ class Transformation(analysis.Analysis):
         for i in range(len(headers)):
             h2c[headers[i]] = i
 
-        self.data = data.Data(headers = headers, data = self.orig_dataset, header2col = h2c)
+        new_data = self.orig_dataset.select_data(headers)
+
+        self.data = data.Data(headers = headers, data = new_data, header2col = h2c)
         
     def get_data_homogeneous(self):
         '''Helper method to get a version of the projected data array with an added homogeneous
@@ -77,7 +79,7 @@ class Transformation(analysis.Analysis):
         - Do NOT update self.data with the homogenous coordinate.
         '''
 
-        data_orig = self.orig_dataset.get_all_data()
+        data_orig = self.data.get_all_data()
 
         data_orig = np.hstack((data_orig, np.ones((data_orig.shape[0], 1))))
 
@@ -104,7 +106,7 @@ class Transformation(analysis.Analysis):
         mags = np.eye(len(magnitudes) + 1)
 
         for i in range(len(magnitudes)):
-            mags[i][len(magnitudes)] = magnitudes[i]
+            mags[i][-1] = magnitudes[i]
 
         return mags
 
@@ -159,9 +161,11 @@ class Transformation(analysis.Analysis):
 
         Dh = T @ Dh.T
 
-        self.data = data.Data(headers = self.data.headers, data = Dh[:, :-1], header2col = self.data.header2col)
+        new_data = Dh.T[:, :-1]
 
-        return Dh[:, :-1]
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return np.copy(new_data)
 
     def scale(self, magnitudes):
         '''Scales the variables `headers` in projected dataset in corresponding amounts specified
@@ -186,13 +190,16 @@ class Transformation(analysis.Analysis):
         '''
         
         Dh = self.get_data_homogeneous()
+
         S = self.scale_matrix(magnitudes)
 
         Dh = S @ Dh.T
 
-        self.data = data.Data(headers = self.data.headers, data = Dh[:, :-1], header2col = self.data.header2col)
+        new_data = Dh.T[:, :-1]
 
-        return Dh[:, :-1]
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return new_data
 
     def transform(self, C):
         '''Transforms the PROJECTED dataset by applying the homogeneous transformation matrix `C`.
@@ -219,9 +226,11 @@ class Transformation(analysis.Analysis):
 
         Dh = C @ Dh.T
 
-        self.data = data.Data(headers = self.data.headers, data = Dh[:, :-1], header2col = self.data.header2col)
+        new_data = Dh.T[:, :-1]
 
-        return Dh[:, :-1]
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return np.copy(new_data)
 
     def normalize_together(self):
         '''Normalize all variables in the projected dataset together by translating the global minimum
@@ -236,8 +245,27 @@ class Transformation(analysis.Analysis):
         NOTE: Given the goal of this project, for full credit you should implement the normalization
         using matrix multiplications (matrix transformations).
         '''
-        
-        pass
+
+        new_data = self.data.get_all_data()
+
+        # Find the min and max of the data
+        min = np.min(new_data)
+        max = np.max(new_data)
+
+        # Find the number of variables in the data
+        num_vars = len(self.data.headers)
+
+        # Create a list of the magnitudes to translate by
+        magnitudes = [min] * num_vars
+
+        self.translate(magnitudes)
+
+        # Scale by 1/(max - min)
+        magnitudes = [1/(max - min)] * num_vars
+
+        self.scale(magnitudes)
+
+        return self.data.get_all_data()
 
     def normalize_separately(self):
         '''Normalize each variable separately by translating its local minimum to zero and scaling
