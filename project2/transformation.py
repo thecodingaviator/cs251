@@ -280,7 +280,32 @@ class Transformation(analysis.Analysis):
         NOTE: Given the goal of this project, for full credit you should implement the normalization
         using matrix multiplications (matrix transformations).
         '''
-        pass
+        
+        new_data = self.data.get_all_data()
+
+        # Store min for each variable
+        mins = np.min(new_data, axis = 0)
+
+        # Store max for each variable
+        maxs = np.max(new_data, axis = 0)
+
+        Dh = self.get_data_homogeneous()
+
+        T = np.eye(Dh.shape[1])
+
+        T[:-1, -1] = -mins
+
+        S = np.eye(Dh.shape[1])
+
+        S[:-1, :-1] = np.diag(1/(maxs - mins))
+
+        new_data = S @ T @ Dh.T
+
+        new_data = new_data.T[:, :-1]
+
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return new_data
 
     def rotation_matrix_3d(self, header, degrees):
         '''Make an 3-D homogeneous rotation matrix for rotating the projected data
@@ -297,6 +322,7 @@ class Transformation(analysis.Analysis):
 
         NOTE: This method just creates the rotation matrix. It does NOT actually PERFORM the rotation!
         '''
+        
         pass
 
     def rotate_3d(self, header, degrees):
