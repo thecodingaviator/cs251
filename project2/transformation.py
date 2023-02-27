@@ -323,7 +323,36 @@ class Transformation(analysis.Analysis):
         NOTE: This method just creates the rotation matrix. It does NOT actually PERFORM the rotation!
         '''
         
-        pass
+        R = np.eye(4)
+
+        # Get index of header
+        index = self.data.header2col[header]
+
+        # Get the angle in radians
+        radians = np.radians(degrees)
+
+        # Get the sine and cosine of the angle
+        sin = np.sin(radians)
+        cos = np.cos(radians)
+
+        # Set the values of the rotation matrix where 0 is x, 1 is y, and 2 is z
+        if index == 0:
+            R[1, 1] = cos
+            R[1, 2] = -sin
+            R[2, 1] = sin
+            R[2, 2] = cos
+        elif index == 1:
+            R[0, 0] = cos
+            R[0, 2] = sin
+            R[2, 0] = -sin
+            R[2, 2] = cos
+        elif index == 2:
+            R[0, 0] = cos
+            R[0, 1] = -sin
+            R[1, 0] = sin
+            R[1, 1] = cos
+
+        return R
 
     def rotate_3d(self, header, degrees):
         '''Rotates the projected data about the variable `header` by the angle (in degrees)
@@ -346,7 +375,18 @@ class Transformation(analysis.Analysis):
         transformed in this method). NOTE: The updated `self.data` SHOULD NOT have a
         homogenous coordinate!
         '''
-        pass
+        
+        Dh = self.get_data_homogeneous()
+
+        C = self.rotation_matrix_3d(header, degrees)
+
+        Dh = C @ Dh.T
+
+        new_data = Dh.T[:, :-1]
+
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return new_data
 
     def scatter_color(self, ind_var, dep_var, c_var, title=None):
         '''Creates a 2D scatter plot with a color scale representing the 3rd dimension.
