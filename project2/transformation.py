@@ -299,6 +299,7 @@ class Transformation(analysis.Analysis):
 
         S[:-1, :-1] = np.diag(1/(maxs - mins))
 
+        # Using direct matrix multiplication rather than methods
         new_data = S @ T @ Dh.T
 
         new_data = new_data.T[:, :-1]
@@ -423,4 +424,82 @@ class Transformation(analysis.Analysis):
 
         # Show the plot.
         plt.show()
+
+    # Extension 1: Nprmalise the data using z-score normalization
+    def normalize_zscore(self):
+        '''
+        Normalize the projected data using z-score normalization feature-wise.
+
+        Returns:
+        -----------
+        ndarray. shape=(N, num_proj_vars). The normalized version of the projected dataset.
+        '''
+
+        # Get the mean and standard deviation of each variable
+        means = np.mean(self.data.data, axis = 0)
+        stds = np.std(self.data.data, axis = 0)
+
+        # Normalize the data
+        new_data = (self.data.data - means) / stds
+
+        # Update self.data
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return new_data
+    
+    # Extension 2: Implement 2D Rotation
+    def rotation_matrix_2d(self, degrees):
+        '''Make a 2-D homogeneous rotation matrix for rotating the projected data
+        about the origin by `degrees`.
+
+        Parameters:
+        -----------
+        degrees: float. Angle (in degrees) by which the projected dataset should be rotated.
+
+        Returns:
+        -----------
+        ndarray. shape=(3, 3). The 2D rotation matrix with homogenous coordinate.
+        '''
+
+        R = np.eye(3)
+
+        # Get the angle in radians
+        radians = np.radians(degrees)
+
+        # Get the sine and cosine of the angle
+        sin = np.sin(radians)
+        cos = np.cos(radians)
+
+        # Set the values of the rotation matrix
+        R[0, 0] = cos
+        R[0, 1] = -sin
+        R[1, 0] = sin
+        R[1, 1] = cos
+
+        return R
+    
+    def rotate_2d(self, degrees):
+        '''Rotates the projected data about the origin by the angle (in degrees)
+        `degrees`.
+
+        Parameters:
+        -----------
+        degrees: float. Angle (in degrees) by which the projected dataset should be rotated.
+
+        Returns:
+        -----------
+        ndarray. shape=(N, num_proj_vars). The rotated data (with all variables in the projected).
+        '''
+
+        Dh = self.get_data_homogeneous()
+
+        C = self.rotation_matrix_2d(degrees)
+
+        Dh = C @ Dh.T
+
+        new_data = Dh.T[:, :-1]
+
+        self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
+
+        return new_data
         
