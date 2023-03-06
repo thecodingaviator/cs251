@@ -344,9 +344,11 @@ class Data:
 
         # Loop between start_row and end_row
         for i in range(start_row, end_row):
+            print(self.data[i])
             newData.append(self.data[i])
 
-        self.data = newData
+        # Store as numpy array
+        self.data = np.array(newData)
 
     def select_data(self, headers, rows=[]):
         '''Return data samples corresponding to the variable names in `headers`.
