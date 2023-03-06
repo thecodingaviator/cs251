@@ -477,7 +477,7 @@ class Transformation(analysis.Analysis):
         R[1, 1] = cos
 
         return R
-    
+
     def rotate_2d(self, degrees):
         '''Rotates the projected data about the origin by the angle (in degrees)
         `degrees`.
@@ -502,4 +502,3 @@ class Transformation(analysis.Analysis):
         self.data = data.Data(headers = self.data.headers, data = new_data, header2col = self.data.header2col)
 
         return new_data
-        
