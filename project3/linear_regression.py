@@ -1,6 +1,6 @@
 '''linear_regression.py
 Subclass of Analysis that performs linear regression on data
-YOUR NAME HERE
+Parth Parth
 CS251 Data Analysis Visualization
 Spring 2023
 '''
@@ -9,7 +9,6 @@ import scipy.linalg
 import matplotlib.pyplot as plt
 
 import analysis
-
 
 class LinearRegression(analysis.Analysis):
     '''
@@ -79,7 +78,25 @@ class LinearRegression(analysis.Analysis):
 
         NOTE: Use other methods in this class where ever possible (do not write the same code twice!)
         '''
-        pass
+        
+        self.ind_vars = ind_vars
+        self.dep_var = dep_var
+
+        self.A = self.data.select_data(ind_vars)
+        self.y = self.data.select_data([dep_var])
+
+        Ahat = np.hstack((np.ones((self.A.shape[0], 1)), self.A))
+
+        c, _, _, _ = scipy.linalg.lstsq(Ahat, self.y)
+
+        self.slope = c[1:]
+        self.intercept = c[0, 0]
+
+        y_pred = self.predict()
+
+        self.R2 = self.r_squared(y_pred)
+        self.residuals = self.compute_residuals(y_pred)
+        self.mse = self.compute_mse()
 
     def predict(self, X=None):
         '''Use fitted linear regression model to predict the values of data matrix self.A.
@@ -99,7 +116,13 @@ class LinearRegression(analysis.Analysis):
 
         NOTE: You can write this method without any loops!
         '''
-        pass
+        
+        if X is not None:
+            y_pred = self.intercept + X @ self.slope
+        else:
+            y_pred = self.intercept + self.A @ self.slope
+
+        return y_pred
 
     def r_squared(self, y_pred):
         '''Computes the R^2 quality of fit statistic
@@ -114,7 +137,10 @@ class LinearRegression(analysis.Analysis):
         R2: float.
             The R^2 statistic
         '''
-        pass
+        
+        R2 = 1 - np.sum((self.y - y_pred) ** 2) / np.sum((self.y - np.mean(self.y)) ** 2)
+
+        return R2
 
     def compute_residuals(self, y_pred):
         '''Determines the residual values from the linear regression model
@@ -130,7 +156,10 @@ class LinearRegression(analysis.Analysis):
             Difference between the y values and the ones predicted by the regression model at the
             data samples
         '''
-        pass
+        
+        residuals = self.y - y_pred
+
+        return residuals
 
     def compute_mse(self):
         '''Computes the mean squared error in the predicted y compared the actual y values.
@@ -142,7 +171,10 @@ class LinearRegression(analysis.Analysis):
 
         Hint: Make use of self.compute_residuals
         '''
-        pass
+        
+        mse = np.mean(self.residuals ** 2)
+
+        return mse
 
     def scatter(self, ind_var, dep_var, title):
         '''Creates a scatter plot with a regression line to visualize the model fit.
@@ -163,7 +195,21 @@ class LinearRegression(analysis.Analysis):
         - Plot the line on top of the scatterplot.
         - Make sure that your plot has a title (with R^2 value in it)
         '''
-        pass
+        
+        # Use scatter from analysis
+        analysis.Analysis.scatter(self, ind_var, dep_var, title)
+
+        # Sample evenly spaced x values
+        x = np.linspace(np.min(self.A), np.max(self.A), 100)
+
+        # Solve for the y values
+        y = np.squeeze(self.intercept + self.slope * x)
+
+        # Plot the line on top
+        plt.plot(x, y, color='red')
+
+        # Title
+        plt.title(title + ' R^2 = ' + str("{:.2f}".format(self.R2)))
 
     def pair_plot(self, data_vars, fig_sz=(12, 12), hists_on_diag=True):
         '''Makes a pair plot with regression lines in each panel.
@@ -187,6 +233,7 @@ class LinearRegression(analysis.Analysis):
         every ind and dep variable pair.
         - Make sure that each plot has a title (with R^2 value in it)
         '''
+        
         pass
 
     def make_polynomial_matrix(self, A, p):
