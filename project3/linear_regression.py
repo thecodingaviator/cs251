@@ -197,15 +197,15 @@ class LinearRegression(analysis.Analysis):
         '''
         
         # Use scatter from analysis
-        analysis.Analysis.scatter(self, ind_var, dep_var, title)
+        local_x, local_y = super().scatter(ind_var, dep_var, title)
 
         # Sample evenly spaced x values
-        x = np.linspace(np.min(self.A), np.max(self.A), 100)
+        x = np.linspace(np.min(local_x), np.max(local_x), 100)
 
-        # Solve for the y values
+        # Solve for y values on regression line
         y = np.squeeze(self.intercept + self.slope * x)
 
-        # Plot the line on top
+        # Plot the line on top of the scatterplot
         plt.plot(x, y, color='red')
 
         # Title
@@ -233,8 +233,44 @@ class LinearRegression(analysis.Analysis):
         every ind and dep variable pair.
         - Make sure that each plot has a title (with R^2 value in it)
         '''
-        
-        pass
+
+        # Use pair_plot
+        fig, axes = super().pair_plot(data_vars, fig_sz)
+
+        for i in range(len(data_vars)):
+            for j in range(len(data_vars)):
+                if i != j:
+                    # Fit a new regression
+                    self.linear_regression([data_vars[i]], data_vars[j])
+
+                    # Sample evenly spaced x values
+                    x = np.linspace(np.min(axes[i, j].get_xlim()), np.max(axes[i, j].get_xlim()), 100)
+
+                    # Solve for y values on regression line
+                    y = np.squeeze(self.intercept + self.slope * x)
+
+                    # Plot the line on top of the scatterplot
+                    axes[i, j].plot(x, y, color='red')
+
+                    # Title
+                    axes[i, j].set_title(f'{data_vars[j]} vs. {data_vars[i]} R^2 = {self.R2:.2f}', fontsize=10)
+
+        if hists_on_diag:
+            numVars = len(data_vars)
+            for i in range(numVars):
+                axes[i, i].remove()
+                axes[i, i] = fig.add_subplot(numVars, numVars, i*numVars+i+1)
+                if i < numVars-1:
+                    axes[i, i].set_xticks([])
+                else:
+                    axes[i, i].set_xlabel(data_vars[i])
+                if i > 0:
+                    axes[i, i].set_yticks([])
+                else:
+                    axes[i, i].set_ylabel(data_vars[i])
+
+                axes[i, i].hist(self.data.select_data([data_vars[i]]), bins=10)
+                axes[i, i].set_title(f'{data_vars[i]} histogram', fontsize=10)
 
     def make_polynomial_matrix(self, A, p):
         '''Takes an independent variable data column vector `A and transforms it into a matrix appropriate
