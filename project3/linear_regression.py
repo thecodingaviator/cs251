@@ -243,7 +243,7 @@ class LinearRegression(analysis.Analysis):
             plt.plot(x, y, color='red')
 
         # Title
-        plt.title(title + ' R^2 = ' + str("{:.2f}".format(self.R2)))
+        plt.title(title + ' $R^2$ = ' + str("{:.2f}".format(self.R2)))
 
     def pair_plot(self, data_vars, fig_sz=(12, 12), hists_on_diag=True):
         '''Makes a pair plot with regression lines in each panel.
