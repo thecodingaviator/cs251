@@ -204,6 +204,7 @@ class LinearRegression(analysis.Analysis):
         ind_var: string. Independent variable name
         dep_var: string. Dependent variable name
         title: string. Title for the plot
+        ci: bool. If True, plot the confidence interval for the regression line
 
         TODO:
         - Use your scatter() in Analysis to handle the plotting of points. Note that it returns
@@ -229,16 +230,19 @@ class LinearRegression(analysis.Analysis):
             plt.plot(x, y, color='red')
 
             if ci:
-                # Compute the confidence interval
-                yhat = self.intercept + self.slope * local_x
-                yerr = self.compute_residuals(yhat)
-                yerr = np.sqrt(np.sum(yerr ** 2) / (len(yerr) - 2))
-                yerr *= scipy.stats.t.ppf(0.95, len(yerr) - 2)
-                yerr /= np.sqrt(np.sum((local_x - np.mean(local_x)) ** 2))
+                # Compute the standard deviation of the residuals
+                residuals = local_y - (self.intercept + self.slope * local_x)
+                sigma = np.std(residuals)
 
-                # Plot the confidence interval
-                plt.fill_between(x, y - yerr, y + yerr, color='red', alpha=0.2)
+                # Compute the upper and lower bounds of the confidence interval
+                upper_bound = y + 1.96 * sigma
+                lower_bound = y - 1.96 * sigma
 
+                # Plot a shaded area between the upper and lower bounds
+                plt.fill_between(x, upper_bound, lower_bound, alpha=0.2, color='royalblue')
+
+                # Legend
+                plt.legend(['Data', 'Regression Line', '95% Confidence Interval'], fontsize=10)
         else:
             Ahat = self.make_polynomial_matrix(local_x, self.p)
 
@@ -252,6 +256,21 @@ class LinearRegression(analysis.Analysis):
 
             # Plot the line on top of the scatterplot
             plt.plot(x, y, color='red')
+
+            if ci:
+                # Compute the standard deviation of the residuals
+                residuals = local_y - (self.intercept + np.dot(Ahat, self.c))
+                sigma = np.std(residuals)
+
+                # Compute the upper and lower bounds of the confidence interval
+                upper_bound = y + 1.96 * sigma
+                lower_bound = y - 1.96 * sigma
+
+                # Plot a shaded area between the upper and lower bounds
+                plt.fill_between(x, upper_bound, lower_bound, alpha=0.2, color='royalblue')
+
+                # Legend
+                plt.legend(['Data', 'Regression Line', '95% Confidence Interval'], fontsize=10)
 
         # Title
         plt.title(title + ' $R^2$ = ' + str("{:.2f}".format(self.R2)))
@@ -382,6 +401,9 @@ class LinearRegression(analysis.Analysis):
         Ahat = np.hstack((np.ones((self.data.get_num_samples(), 1)), self.make_polynomial_matrix(self.A, self.p)))
 
         c, _, _, _ = scipy.linalg.lstsq(Ahat, self.y)
+
+        # For CI
+        self.c = c[1:, :]
 
         self.intercept = c[0, 0]
         self.slope = c[1:, :]
