@@ -195,7 +195,7 @@ class LinearRegression(analysis.Analysis):
 
         return mse
 
-    def scatter(self, ind_var, dep_var, title):
+    def scatter(self, ind_var, dep_var, title, ci=False):
         '''Creates a scatter plot with a regression line to visualize the model fit.
         Assumes linear regression has been already run.
 
@@ -227,6 +227,17 @@ class LinearRegression(analysis.Analysis):
 
             # Plot the line on top of the scatterplot
             plt.plot(x, y, color='red')
+
+            if ci:
+                # Compute the confidence interval
+                yhat = self.intercept + self.slope * local_x
+                yerr = self.compute_residuals(yhat)
+                yerr = np.sqrt(np.sum(yerr ** 2) / (len(yerr) - 2))
+                yerr *= scipy.stats.t.ppf(0.95, len(yerr) - 2)
+                yerr /= np.sqrt(np.sum((local_x - np.mean(local_x)) ** 2))
+
+                # Plot the confidence interval
+                plt.fill_between(x, y - yerr, y + yerr, color='red', alpha=0.2)
 
         else:
             Ahat = self.make_polynomial_matrix(local_x, self.p)
