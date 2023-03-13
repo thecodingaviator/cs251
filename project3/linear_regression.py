@@ -98,6 +98,8 @@ class LinearRegression(analysis.Analysis):
         self.residuals = self.compute_residuals(y_pred)
         self.mse = self.compute_mse()
 
+        self.p = 1
+
     def predict(self, X=None):
         '''Use fitted linear regression model to predict the values of data matrix self.A.
         Generates the predictions y_pred = mA + b, where (m, b) are the model fit slope and intercept,
@@ -117,10 +119,22 @@ class LinearRegression(analysis.Analysis):
         NOTE: You can write this method without any loops!
         '''
         
-        if X is not None:
-            y_pred = self.intercept + X @ self.slope
+        if self.p != 1:
+            if X is not None:
+                y_pred = self.intercept + X @ self.slope[0]
+            else:
+                y_pred = self.intercept + self.A @ self.slope[0]
+            for i in range(1, self.p):
+                if X is not None:
+                    y_pred += X ** (i + 1) @ self.slope[i]
+                else:
+                    y_pred += self.A ** (i + 1) @ self.slope[i]
+
         else:
-            y_pred = self.intercept + self.A @ self.slope
+            if X is not None:
+                y_pred = self.intercept + X @ self.slope
+            else:
+                y_pred = self.intercept + self.A @ self.slope
 
         return y_pred
 
@@ -138,7 +152,9 @@ class LinearRegression(analysis.Analysis):
             The R^2 statistic
         '''
         
-        R2 = 1 - np.sum((self.y - y_pred) ** 2) / np.sum((self.y - np.mean(self.y)) ** 2)
+        residue = np.sum(self.compute_residuals(y_pred) ** 2)
+        
+        R2 = 1 - (residue / np.sum((self.y - np.mean(self.y)) ** 2))
 
         return R2
 
@@ -157,7 +173,10 @@ class LinearRegression(analysis.Analysis):
             data samples
         '''
         
-        residuals = self.y - y_pred
+        if self.p == 1:
+            residuals = self.y - y_pred
+        else:
+            residuals = np.squeeze(self.y) - y_pred
 
         return residuals
 
@@ -199,14 +218,29 @@ class LinearRegression(analysis.Analysis):
         # Use scatter from analysis
         local_x, local_y = super().scatter(ind_var, dep_var, title)
 
-        # Sample evenly spaced x values
-        x = np.linspace(np.min(local_x), np.max(local_x), 100)
+        if self.p == 1:
+            # Sample evenly spaced x values
+            x = np.linspace(np.min(local_x), np.max(local_x), 100)
 
-        # Solve for y values on regression line
-        y = np.squeeze(self.intercept + self.slope * x)
+            # Solve for y values on regression line
+            y = np.squeeze(self.intercept + self.slope * x)
 
-        # Plot the line on top of the scatterplot
-        plt.plot(x, y, color='red')
+            # Plot the line on top of the scatterplot
+            plt.plot(x, y, color='red')
+
+        else:
+            Ahat = self.make_polynomial_matrix(local_x, self.p)
+
+            # Sample evenly spaced x values
+            x = np.linspace(np.min(local_x), np.max(local_x), 100)
+
+            # Compute the y values
+            y = self.intercept + self.slope[0] * x
+            for i in range(1, self.p):
+                y += self.slope[i] * x ** (i + 1)
+
+            # Plot the line on top of the scatterplot
+            plt.plot(x, y, color='red')
 
         # Title
         plt.title(title + ' R^2 = ' + str("{:.2f}".format(self.R2)))
@@ -294,7 +328,15 @@ class LinearRegression(analysis.Analysis):
         NOTE: There should not be a intercept term ("x^0"), the linear regression solver method
         should take care of that.
         '''
-        pass
+        
+        # Create ndarray of shape (num_data_samps, p)
+        poly_matrix = np.zeros((A.shape[0], p))
+
+        # Fill in the ndarray
+        for i in range(p):
+            poly_matrix[:, i] = A[:, 0] ** (i + 1)
+
+        return poly_matrix
 
     def poly_regression(self, ind_var, dep_var, p):
         '''Perform polynomial regression — generalizes self.linear_regression to polynomial curves
@@ -318,7 +360,26 @@ class LinearRegression(analysis.Analysis):
             appropriate for polynomial regresssion. Do this with self.make_polynomial_matrix.
             - You set the instance variable for the polynomial regression degree (self.p)
         '''
-        pass
+        
+        self.ind_vars = [ind_var]
+        self.dep_var = dep_var
+        self.p = p
+
+        self.A = self.data.select_data(self.ind_vars)
+        self.y = self.data.select_data([self.dep_var])
+
+        Ahat = np.hstack((np.ones((self.data.get_num_samples(), 1)), self.make_polynomial_matrix(self.A, self.p)))
+
+        c, _, _, _ = scipy.linalg.lstsq(Ahat, self.y)
+
+        self.intercept = c[0, 0]
+        self.slope = c[1:, :]
+
+        y_pred = self.predict()
+
+        self.residuals = self.compute_residuals(y_pred)
+        self.R2 = self.r_squared(y_pred)
+        self.mse = self.compute_mse()
 
     def get_fitted_slope(self):
         '''Returns the fitted regression slope.
@@ -328,6 +389,7 @@ class LinearRegression(analysis.Analysis):
         -----------
         ndarray. shape=(num_ind_vars, 1). The fitted regression slope(s).
         '''
+
         return self.slope
 
     def get_fitted_intercept(self):
@@ -338,7 +400,8 @@ class LinearRegression(analysis.Analysis):
         -----------
         float. The fitted regression intercept(s).
         '''
-        pass
+        
+        return self.intercept
 
     def initialize(self, ind_vars, dep_var, slope, intercept, p):
         '''Sets fields based on parameter values.
@@ -359,4 +422,18 @@ class LinearRegression(analysis.Analysis):
         TODO:
         - Use parameters and call methods to set all instance variables defined in constructor. 
         '''
-        pass
+        
+        self.ind_vars = ind_vars
+        self.dep_var = dep_var
+        self.slope = slope
+        self.intercept = intercept
+        self.p = p
+
+        self.A = self.data.select_data(self.ind_vars)
+        self.y = self.data.select_data([self.dep_var])
+
+        y_pred = self.predict()
+
+        self.residuals = self.compute_residuals(y_pred)
+        self.R2 = self.r_squared(y_pred)
+        self.mse = self.compute_mse()
